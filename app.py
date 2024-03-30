@@ -129,6 +129,30 @@ def get_t_word_summary(t_word_results):
 
     return t_word_summary
 
+def export_to_pdf(c_word_results, t_word_summary):
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Add title
+    pdf.set_font("Arial", size=16, style='B')
+    pdf.cell(200, 10, txt="French National Assembly News Analysis Results", ln=1, align='C')
+
+    # Add C-Word results
+    pdf.set_font("Arial", size=12, style='B')
+    pdf.cell(200, 10, txt="C-Word Results", ln=1)
+    pdf.set_font("Arial", size=10)
+    for c_word, context in c_word_results:
+        pdf.multi_cell(200, 10, txt=f"{c_word}: {context}", align='L')
+
+    # Add T-Word summary
+    pdf.set_font("Arial", size=12, style='B')
+    pdf.cell(200, 10, txt="T-Word Summary", ln=1)
+    pdf.set_font("Arial", size=10)
+    pdf.multi_cell(200, 10, txt=t_word_summary, align='L')
+
+    # Save the PDF
+    pdf.output("analysis_results.pdf")
+
 def main():
     st.set_page_config(page_title="French National Assembly News Analyzer")
     st.title("French National Assembly News Analyzer")
@@ -148,11 +172,14 @@ def main():
         date_str = get_date_str(selected_date)
         url = f'https://www.assemblee-nationale.fr/dyn/16/comptes-rendus/seance/session-ordinaire-de-2023-2024/seance-du-{date_str}'
         st.write(f"Checking URL: {url}")
+
+        progress_bar = st.progress(0)
         text_content = get_text_content(url)
         if text_content is not None:
             date_tag = f"Date: {date_str}"
             url_tag = f"URL: {url.split('-2024/')[-1]}"
             c_word_results, t_word_results = analyze_text(text_content, date_tag, url_tag, c_words, t_words)
+            progress_bar.progress(50)
 
             # Display C-Word results
             st.subheader("C-Word Results")
@@ -163,6 +190,12 @@ def main():
             st.subheader("T-Word Results")
             t_word_summary = get_t_word_summary(t_word_results)
             st.markdown(t_word_summary, unsafe_allow_html=True)
+
+            progress_bar.progress(100)
+
+            # Export results to PDF
+            export_to_pdf(c_word_results, t_word_summary)
+            st.success("Analysis complete. Results exported to 'analysis_results.pdf'.")
         else:
             st.write("No text content found for the selected date.")
 
