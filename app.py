@@ -60,12 +60,12 @@ def get_date_str(date):
 
 
 # Function to analyze text and retrieve relevant content
-def analyze_text(text_content, date_tag, url_tag):
+def analyze_text(text_content, date_tag, url_tag, c_words, t_words):
     c_word_results = []
     t_word_results = []
 
     # Find C-Word mentions and context
-    for c_word in C_WORDS:
+    for c_word in c_words:
         index = text_content.find(c_word)
         while index != -1:
             start_index = max(0, index - 70)
@@ -75,7 +75,7 @@ def analyze_text(text_content, date_tag, url_tag):
             index = text_content.find(c_word, end_index)
 
     # Find T-Word mentions and context, and generate summaries using OpenAI API
-    for t_word in T_WORDS:
+    for t_word in t_words:
         index = text_content.find(t_word)
         while index != -1:
             start_index = max(0, index - 100)
