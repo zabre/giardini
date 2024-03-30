@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import datetime
 import traceback
 from openai import OpenAI
+from fpdf import FPDF
 
 client = OpenAI(
     api_key="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",  # Replace with your API key
