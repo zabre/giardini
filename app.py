@@ -4,7 +4,6 @@ import os
 os.environ['CURL_CA_BUNDLE'] = ''
 from bs4 import BeautifulSoup
 import datetime
-import locale
 import traceback
 from openai import OpenAI
 
@@ -30,18 +29,35 @@ def get_text_content(url):
         traceback.print_exc()
         return None
 
-# Function to generate date string based on current date
-def get_date_str(include_yesterday=False):
-    if include_yesterday:
-        yesterday = datetime.date.today() - datetime.timedelta(days=1)
-        date_str = yesterday.strftime('%A %d %B %Y')
-    else:
-        today = datetime.date.today()
-        date_str = today.strftime('%A %d %B %Y')
+# Function to generate date string based on current date and date french converter (manual lol)
+def get_date_str(date):
+    days_of_week = {
+        0: 'lundi',
+        1: 'mardi',
+        2: 'mercredi',
+        3: 'jeudi',
+        4: 'vendredi',
+        5: 'samedi',
+        6: 'dimanche'
+    }
+    months = {
+        1: 'janvier',
+        2: 'février',
+        3: 'mars',
+        4: 'avril',
+        5: 'mai',
+        6: 'juin',
+        7: 'juillet',
+        8: 'août',
+        9: 'septembre',
+        10: 'octobre',
+        11: 'novembre',
+        12: 'décembre'
+    }
+    day_of_week = days_of_week[date.weekday()]
+    month = months[date.month]
+    return f"{day_of_week}-{date.day}-{month}-{date.year}"
 
-    date_str = date_str.lower()
-    date_str = date_str.replace(' ', '-')
-    return date_str
 
 # Function to analyze text and retrieve relevant content
 def analyze_text(text_content, date_tag, url_tag):
@@ -125,39 +141,30 @@ def main():
     c_words = [word.strip() for word in c_words_input.split(',')] if c_words_input else []
     t_words = [word.strip() for word in t_words_input.split(',')] if t_words_input else []
 
-    # Add a checkbox to include yesterday's date
-    include_yesterday = st.checkbox("Include yesterday's date")
+    # Add a date input field
+    selected_date = st.date_input("Select a date")
 
     if st.button("Analyze News"):
-        date_str = get_date_str(include_yesterday=include_yesterday)
-        urls = [
-            f'https://www.assemblee-nationale.fr/dyn/16/comptes-rendus/seance/session-ordinaire-de-2023-2024/premiere-seance-du-{date_str}',
-            f'https://www.assemblee-nationale.fr/dyn/16/comptes-rendus/seance/session-ordinaire-de-2023-2024/deuxieme-seance-du-{date_str}',
-            f'https://www.assemblee-nationale.fr/dyn/16/comptes-rendus/seance/session-ordinaire-de-2023-2024/troisieme-seance-du-{date_str}'
-        ]
-        c_word_results = []
-        t_word_results = []
-        for url in urls:
-            st.write(f"Checking URL: {url}")
-            text_content = get_text_content(url)
-            if text_content is not None:
-                date_tag = f"Date: {date_str}"
-                url_tag = f"URL: {url.split('-2024/')[-1]}"
-                c_results, t_results = analyze_text(text_content, date_tag, url_tag, c_words, t_words)
-                c_word_results.extend(c_results)
-                t_word_results.extend(t_results)
-            else:
-                st.write("Skipping URL (text content not retrieved)")
+        date_str = get_date_str(selected_date)
+        url = f'https://www.assemblee-nationale.fr/dyn/16/comptes-rendus/seance/session-ordinaire-de-2023-2024/seance-du-{date_str}'
+        st.write(f"Checking URL: {url}")
+        text_content = get_text_content(url)
+        if text_content is not None:
+            date_tag = f"Date: {date_str}"
+            url_tag = f"URL: {url.split('-2024/')[-1]}"
+            c_word_results, t_word_results = analyze_text(text_content, date_tag, url_tag, c_words, t_words)
 
-        # Display C-Word results
-        st.subheader("C-Word Results")
-        c_word_table = f'<table><tr><th>C-Word</th><th>Context</th></tr>{"".join([f"<tr><td>{c_word}</td><td>{context}</td></tr>" for c_word, context in c_word_results])}</table>'
-        st.markdown(c_word_table, unsafe_allow_html=True)
+            # Display C-Word results
+            st.subheader("C-Word Results")
+            c_word_table = f'<table><tr><th>C-Word</th><th>Context</th></tr>{"".join([f"<tr><td>{c_word}</td><td>{context}</td></tr>" for c_word, context in c_word_results])}</table>'
+            st.markdown(c_word_table, unsafe_allow_html=True)
 
-        # Display T-Word results
-        st.subheader("T-Word Results")
-        t_word_summary = get_t_word_summary(t_word_results)
-        st.markdown(t_word_summary, unsafe_allow_html=True)
+            # Display T-Word results
+            st.subheader("T-Word Results")
+            t_word_summary = get_t_word_summary(t_word_results)
+            st.markdown(t_word_summary, unsafe_allow_html=True)
+        else:
+            st.write("No text content found for the selected date.")
 
 if __name__ == "__main__":
     main()
