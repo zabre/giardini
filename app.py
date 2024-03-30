@@ -32,15 +32,10 @@ def get_text_content(url):
 
 # Function to generate date string based on current date
 def get_date_str(include_yesterday=False):
-    # Set the locale to French
-    locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
-
     if include_yesterday:
-        # Get yesterday's date
         yesterday = datetime.date.today() - datetime.timedelta(days=1)
         date_str = yesterday.strftime('%A %d %B %Y')
     else:
-        # Get today's date
         today = datetime.date.today()
         date_str = today.strftime('%A %d %B %Y')
 
@@ -122,6 +117,14 @@ def main():
     st.set_page_config(page_title="French National Assembly News Analyzer")
     st.title("French National Assembly News Analyzer")
 
+    # Add input fields for C-Words and T-Words
+    c_words_input = st.text_input("Enter C-Words (comma-separated)")
+    t_words_input = st.text_input("Enter T-Words (comma-separated)")
+
+    # Convert input strings to lists
+    c_words = [word.strip() for word in c_words_input.split(',')] if c_words_input else []
+    t_words = [word.strip() for word in t_words_input.split(',')] if t_words_input else []
+
     # Add a checkbox to include yesterday's date
     include_yesterday = st.checkbox("Include yesterday's date")
 
@@ -140,7 +143,7 @@ def main():
             if text_content is not None:
                 date_tag = f"Date: {date_str}"
                 url_tag = f"URL: {url.split('-2024/')[-1]}"
-                c_results, t_results = analyze_text(text_content, date_tag, url_tag)
+                c_results, t_results = analyze_text(text_content, date_tag, url_tag, c_words, t_words)
                 c_word_results.extend(c_results)
                 t_word_results.extend(t_results)
             else:
