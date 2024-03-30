@@ -152,7 +152,7 @@ def export_to_pdf(c_word_results, t_word_summary):
     pdf.multi_cell(200, 10, txt=t_word_summary, align='L')
 
     # Save the PDF
-    pdf.output("analysis_results.pdf")
+    pdf.output("analysis_results.pdf", 'F')
 
 def main():
     st.set_page_config(page_title="French National Assembly News Analyzer")
@@ -176,26 +176,31 @@ def main():
 
         progress_bar = st.progress(0)
         text_content = get_text_content(url)
+        progress_bar.progress(10)
+
         if text_content is not None:
             date_tag = f"Date: {date_str}"
             url_tag = f"URL: {url.split('-2024/')[-1]}"
+            progress_bar.progress(20)
+
             c_word_results, t_word_results = analyze_text(text_content, date_tag, url_tag, c_words, t_words)
-            progress_bar.progress(50)
+            progress_bar.progress(60)
 
             # Display C-Word results
             st.subheader("C-Word Results")
             c_word_table = f'<table><tr><th>C-Word</th><th>Context</th></tr>{"".join([f"<tr><td>{c_word}</td><td>{context}</td></tr>" for c_word, context in c_word_results])}</table>'
             st.markdown(c_word_table, unsafe_allow_html=True)
+            progress_bar.progress(80)
 
             # Display T-Word results
             st.subheader("T-Word Results")
             t_word_summary = get_t_word_summary(t_word_results)
             st.markdown(t_word_summary, unsafe_allow_html=True)
-
-            progress_bar.progress(100)
+            progress_bar.progress(90)
 
             # Export results to PDF
-            export_to_pdf(c_word_results, t_word_summary)
+            export_to_pdf(c_word_results, t_word_summary.encode('latin-1', 'replace').decode('latin-1'))
+            progress_bar.progress(100)
             st.success("Analysis complete. Results exported to 'analysis_results.pdf'.")
         else:
             st.write("No text content found for the selected date.")
