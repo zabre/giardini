@@ -164,6 +164,47 @@ def main():
     # Display app icon/logo next to the title
     st.image(app_icon, width=100)
 
+        # Load small logo
+    small_logo = Image.open("small_logo.png")
+    
+    # Display small logo in the bottom left
+    st.markdown(
+        """
+        <style>
+        .small-logo {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 200px;
+            z-index: 999;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.image(small_logo, width=200, output_format="PNG")
+    
+    # Display Nota Bene text in the bottom left
+    st.markdown(
+        """
+        <style>
+        .nota-bene {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="nota-bene">Disclaimer: Ce produit a été réalisé par TBWA Corporate pour un usage interne seulement.</div>',
+        unsafe_allow_html=True,
+    )
+
     # Add input fields for C-Words and T-Words
     c_words_input = st.text_input("Clients à monitorer (si plusiers entités, séparez les par une virgule)")
     t_words_input = st.text_input("Thématiques à monitorer (si plusiers thématiques, séparez les par une virgule)")
