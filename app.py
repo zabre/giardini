@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import datetime
 import traceback
 from openai import OpenAI
+from PIL import Image
 from fpdf import FPDF
 import unidecode
 
