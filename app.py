@@ -10,7 +10,7 @@ from fpdf import FPDF
 import unidecode
 
 client = OpenAI(
-    api_key="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",  # Replace with your API key
+    api_key=st.secrets["OPENAI_API_KEY"],
 )
 
 # Define C-Words and T-Words
@@ -19,7 +19,7 @@ T_WORDS = ['avocat', 'énergie', 'automobile', 'autoroute', 'retraite', "sécuri
 
 # Function to get text content from webpage
 def get_text_content(url):
-    print("Getting text content from URL...")
+    print("La souris passe entre les bancs de l'Assemblée...")
     try:
         response = requests.get(url, verify=False)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -137,18 +137,18 @@ def export_to_pdf(c_word_results, t_word_summary):
 
     # Add title
     pdf.set_font("Arial", size=16, style='B')
-    pdf.cell(200, 10, txt="French National Assembly News Analysis Results", ln=1, align='C')
+    pdf.cell(200, 10, txt="Giardini, la petite souris de l'Assemblée", ln=1, align='C')
 
     # Add C-Word results
     pdf.set_font("Arial", size=12, style='B')
-    pdf.cell(200, 10, txt="C-Word Results", ln=1)
+    pdf.cell(200, 10, txt="Clients", ln=1)
     pdf.set_font("Arial", size=10)
     for c_word, context in c_word_results:
         pdf.multi_cell(200, 10, txt=unidecode.unidecode(f"{c_word}: {context}"), align='L')
 
     # Add T-Word summary
     pdf.set_font("Arial", size=12, style='B')
-    pdf.cell(200, 10, txt="T-Word Summary", ln=1)
+    pdf.cell(200, 10, txt="Thèmes", ln=1)
     pdf.set_font("Arial", size=10)
     pdf.multi_cell(200, 10, txt=unidecode.unidecode(t_word_summary), align='L')
 
@@ -156,12 +156,12 @@ def export_to_pdf(c_word_results, t_word_summary):
     pdf.output("analysis_results.pdf", 'F')
 
 def main():
-    st.set_page_config(page_title="French National Assembly News Analyzer")
-    st.title("French National Assembly News Analyzer")
+    st.set_page_config(page_title="Giardini, la petite souris de l'Assemblée")
+    st.title("Giardini, la petite souris de l'Assemblée")
 
     # Add input fields for C-Words and T-Words
-    c_words_input = st.text_input("Enter C-Words (comma-separated)")
-    t_words_input = st.text_input("Enter T-Words (comma-separated)")
+    c_words_input = st.text_input("Clients à monitorer (si plusiers entités, séparez les par une virgule)")
+    t_words_input = st.text_input("Thématiques à monitorer (si plusiers thématiques, séparez les par une virgule)")
 
     # Convert input strings to lists
     c_words = [word.strip() for word in c_words_input.split(',')] if c_words_input else []
@@ -170,10 +170,10 @@ def main():
     # Add a date input field
     selected_date = st.date_input("Select a date")
 
-    if st.button("Analyze News"):
+    if st.button("Envoyez Giardini"):
         date_str = get_date_str(selected_date)
         url = f'https://www.assemblee-nationale.fr/dyn/16/comptes-rendus/seance/session-ordinaire-de-2023-2024/seance-du-{date_str}'
-        st.write(f"Checking URL: {url}")
+        st.write(f"Giardini recherche ici: {url}")
 
         progress_bar = st.progress(0)
         text_content = get_text_content(url)
@@ -188,13 +188,13 @@ def main():
             progress_bar.progress(60)
 
             # Display C-Word results
-            st.subheader("C-Word Results")
+            st.subheader("Clients")
             c_word_table = f'<table><tr><th>C-Word</th><th>Context</th></tr>{"".join([f"<tr><td>{c_word}</td><td>{context}</td></tr>" for c_word, context in c_word_results])}</table>'
             st.markdown(c_word_table, unsafe_allow_html=True)
             progress_bar.progress(80)
 
             # Display T-Word results
-            st.subheader("T-Word Results")
+            st.subheader("Thématiques")
             t_word_summary = get_t_word_summary(t_word_results)
             st.markdown(t_word_summary, unsafe_allow_html=True)
             progress_bar.progress(90)
@@ -202,7 +202,7 @@ def main():
             # Export results to PDF
             export_to_pdf(c_word_results, t_word_summary)
             progress_bar.progress(100)
-            st.success("Analysis complete. Results exported to 'analysis_results.pdf'.")
+            st.success("Giardini a fini. Vos résultats sont prets ")
         else:
             st.write("No text content found for the selected date.")
 
