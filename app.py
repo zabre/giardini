@@ -221,8 +221,8 @@ def main():
             position: fixed;
             bottom: 20px;
             left: 20px;
-            width: 200px;
-            height: 200px;
+            width: 100px;
+            height: 100px;
             z-index: 999;
         }
         </style>
