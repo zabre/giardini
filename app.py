@@ -156,8 +156,12 @@ def export_to_pdf(c_word_results, t_word_summary):
     pdf.output("analysis_results.pdf", 'F')
 
 def main():
-    st.set_page_config(page_title="Giardini, la petite souris de l'Assemblée")
+    st.set_page_config(page_title="Giardini, la petite souris de l'Assemblée", page_icon=":pirate_flag:", layout="centered")
     st.title("Giardini, la petite souris de l'Assemblée")
+    # Load app icon/logo
+    app_icon = Image.open("app_icon.png")
+    # Display app icon/logo next to the title
+    st.image(app_icon, width=100)
 
     # Add input fields for C-Words and T-Words
     c_words_input = st.text_input("Clients à monitorer (si plusiers entités, séparez les par une virgule)")
