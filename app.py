@@ -173,7 +173,7 @@ def main():
     t_words = [word.strip() for word in t_words_input.split(',')] if t_words_input else []
 
     # Add a date input field
-    selected_date = st.date_input("Select a date")
+    selected_date = st.date_input("Choisir la date de la séance")
 
     if st.button("Envoyez Giardini"):
         date_str = get_date_str(selected_date)
