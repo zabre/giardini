@@ -7,6 +7,7 @@ import datetime
 import traceback
 from openai import OpenAI
 from fpdf import FPDF
+import unidecode
 
 client = OpenAI(
     api_key="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",  # Replace with your API key
@@ -143,13 +144,13 @@ def export_to_pdf(c_word_results, t_word_summary):
     pdf.cell(200, 10, txt="C-Word Results", ln=1)
     pdf.set_font("Arial", size=10)
     for c_word, context in c_word_results:
-        pdf.multi_cell(200, 10, txt=f"{c_word}: {context}", align='L')
+        pdf.multi_cell(200, 10, txt=unidecode.unidecode(f"{c_word}: {context}"), align='L')
 
     # Add T-Word summary
     pdf.set_font("Arial", size=12, style='B')
     pdf.cell(200, 10, txt="T-Word Summary", ln=1)
     pdf.set_font("Arial", size=10)
-    pdf.multi_cell(200, 10, txt=t_word_summary, align='L')
+    pdf.multi_cell(200, 10, txt=unidecode.unidecode(t_word_summary), align='L')
 
     # Save the PDF
     pdf.output("analysis_results.pdf", 'F')
@@ -199,7 +200,7 @@ def main():
             progress_bar.progress(90)
 
             # Export results to PDF
-            export_to_pdf(c_word_results, t_word_summary.encode('latin-1', 'replace').decode('latin-1'))
+            export_to_pdf(c_word_results, t_word_summary)
             progress_bar.progress(100)
             st.success("Analysis complete. Results exported to 'analysis_results.pdf'.")
         else:
