@@ -13,11 +13,6 @@ import unidecode
 client = OpenAI(
     api_key=st.secrets["OPENAI_API_KEY"],
 )
-
-# Define C-Words and T-Words
-C_WORDS = ['edf', 'systeme u', 'plastic omnium', 'danone', 'vey', 'netflix', 'emirates', 'eiffage', 'grt gaz', 'legrand']
-T_WORDS = ['avocat', 'énergie', 'automobile', 'autoroute', 'retraite', "sécurité", "vie"]
-
 # Function to get text content from webpage
 def get_text_content(url):
     print("La souris passe entre les bancs de l'Assemblée...")
