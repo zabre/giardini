@@ -85,9 +85,32 @@ class ContentAnalyzer:
             logger.error(f"Error fetching content from {url}: {str(e)}")
             return None
 
+    def get_context_window(self, text: str, word: str, window_size: int = 10) -> str:
+        """Extract context window around word with specified number of words before and after."""
+        word_index = text.lower().find(word.lower())
+        if word_index == -1:
+            return ""
+
+        # Get text before the word
+        text_before = text[:word_index].strip()
+        words_before = text_before.split()[-window_size:] if text_before else []
+
+        # Get text after the word
+        text_after = text[word_index + len(word):].strip()
+        words_after = text_after.split()[:window_size] if text_after else []
+
+        # Combine the context
+        context = (
+            " ".join(words_before) +
+            f" **{text[word_index:word_index + len(word)]}** " +
+            " ".join(words_after)
+        )
+        
+        return f"...{context.strip()}..."
+
     def analyze_text(self, text_content: str, date_tag: str, url_tag: str, 
                     c_words: List[str], t_words: List[str]) -> Tuple[List, List]:
-        """Enhanced text analysis with better context handling."""
+        """Enhanced text analysis with context window."""
         if not text_content:
             return [], []
 
@@ -99,13 +122,17 @@ class ContentAnalyzer:
         for paragraph in paragraphs:
             for c_word in c_words:
                 if c_word.lower() in paragraph.lower():
-                    c_word_results.append((c_word, f"{date_tag}\n{url_tag}\nContexte: {paragraph.strip()}"))
+                    context = self.get_context_window(paragraph, c_word)
+                    if context:
+                        c_word_results.append((c_word, f"{date_tag}\n{url_tag}\nContexte: {context}"))
                     
             for t_word in t_words:
                 if t_word.lower() in paragraph.lower():
-                    summary = self.get_summary(t_word, paragraph)
-                    if summary:
-                        t_word_results.append((t_word, f"{date_tag}\n{url_tag}\n{summary}"))
+                    context = self.get_context_window(paragraph, t_word, window_size=15)
+                    if context:
+                        summary = self.get_summary(t_word, context)
+                        if summary:
+                            t_word_results.append((t_word, f"{date_tag}\n{url_tag}\n{summary}"))
 
         return c_word_results, t_word_results
 
@@ -118,16 +145,16 @@ class ContentAnalyzer:
                     "content": f"""
                     En tant qu'expert en analyse parlementaire, analysez le contexte suivant 
                     concernant le sujet '{topic}'. Veuillez fournir:
-                    1. Un résumé concis des points principaux
-                    2. Les implications potentielles
-                    3. Les acteurs clés mentionnés
+                    1. Un résumé concis (2-3 lignes maximum)
+                    2. Les implications potentielles (1 ligne)
+                    3. Les acteurs clés mentionnés (liste courte)
                     
                     Contexte: {context}
                     """
                 }],
                 model="gpt-4-0125-preview",
                 temperature=0.7,
-                max_tokens=500
+                max_tokens=250
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
@@ -151,7 +178,7 @@ class PDFExporter:
     def _add_header(self):
         """Add styled header to PDF."""
         self.pdf.set_font("Arial", "B", 16)
-        self.pdf.cell(0, 10, "Rapport de Surveillance Parlementaire", ln=True, align='C')
+        self.pdf.cell(0, 10, "Synthèse des débats à l'Assemblée", ln=True, align='C')
         self.pdf.ln(10)
 
     def _add_timestamp(self):
@@ -163,59 +190,61 @@ class PDFExporter:
 
     def _add_client_section(self, results: List):
         """Add client mentions section."""
-        self.pdf.set_font("Arial", "B", 14)
-        self.pdf.cell(0, 10, "Mentions Clients", ln=True)
-        self.pdf.ln(5)
-        
-        for client, context in results:
-            self.pdf.set_font("Arial", "B", 12)
-            self.pdf.cell(0, 10, unidecode.unidecode(client), ln=True)
-            self.pdf.set_font("Arial", "", 10)
-            self.pdf.multi_cell(0, 10, unidecode.unidecode(context))
+        if results:
+            self.pdf.set_font("Arial", "B", 14)
+            self.pdf.cell(0, 10, "Mentions", ln=True)
             self.pdf.ln(5)
+            
+            for client, context in results:
+                self.pdf.set_font("Arial", "B", 12)
+                self.pdf.cell(0, 10, unidecode.unidecode(client), ln=True)
+                self.pdf.set_font("Arial", "", 10)
+                self.pdf.multi_cell(0, 10, unidecode.unidecode(context))
+                self.pdf.ln(5)
 
     def _add_theme_section(self, results: List):
         """Add thematic analysis section."""
-        self.pdf.set_font("Arial", "B", 14)
-        self.pdf.cell(0, 10, "Analyse Thématique", ln=True)
-        self.pdf.ln(5)
-        
-        for theme, analysis in results:
-            self.pdf.set_font("Arial", "B", 12)
-            self.pdf.cell(0, 10, unidecode.unidecode(theme), ln=True)
-            self.pdf.set_font("Arial", "", 10)
-            self.pdf.multi_cell(0, 10, unidecode.unidecode(analysis))
+        if results:
+            self.pdf.set_font("Arial", "B", 14)
+            self.pdf.cell(0, 10, "Analyse Thématique", ln=True)
             self.pdf.ln(5)
+            
+            for theme, analysis in results:
+                self.pdf.set_font("Arial", "B", 12)
+                self.pdf.cell(0, 10, unidecode.unidecode(theme), ln=True)
+                self.pdf.set_font("Arial", "", 10)
+                self.pdf.multi_cell(0, 10, unidecode.unidecode(analysis))
+                self.pdf.ln(5)
 
 def main():
     st.set_page_config(
-        page_title="Giardini - Surveillance Parlementaire",
-        page_icon="🏛️",
+        page_title="Giardini",
+        page_icon="🐭",
         layout="wide"
     )
 
+    # UI Components
+    st.title("🐭 Giardini, la petite souris de l'Assemblée")
+    
     # Initialize components
     url_generator = AssemblyURLGenerator()
     content_analyzer = ContentAnalyzer(st.secrets["OPENAI_API_KEY"])
     pdf_exporter = PDFExporter()
 
-    # UI Components
-    st.title("🏛️ Giardini - Surveillance Parlementaire")
-    
     col1, col2 = st.columns(2)
     with col1:
         start_date = st.date_input("Date de début", min_value=date(2022, 1, 1))
-        c_words = st.text_input("Clients à surveiller (séparés par des virgules)")
+        c_words = st.text_input("Entités à suivre (séparées par des virgules)")
         c_words = [word.strip() for word in c_words.split(',')] if c_words else []
     
     with col2:
         end_date = st.date_input("Date de fin", min_value=start_date)
-        t_words = st.text_input("Thématiques à surveiller (séparées par des virgules)")
+        t_words = st.text_input("Thématiques à suivre (séparées par des virgules)")
         t_words = [word.strip() for word in t_words.split(',')] if t_words else []
 
-    if st.button("Lancer l'analyse", type="primary"):
+    if st.button("Lancer Giardini", type="primary"):
         if not c_words and not t_words:
-            st.error("Veuillez spécifier au moins un client ou une thématique à surveiller.")
+            st.error("Veuillez spécifier au moins une entité ou une thématique à suivre.")
             return
 
         progress_bar = st.progress(0)
@@ -232,7 +261,7 @@ def main():
             urls = url_generator.generate_urls(current_date)
             
             for url in urls:
-                status_text.text(f"Analyse de la session du {current_date.strftime('%d/%m/%Y')}...")
+                status_text.text(f"Analyse de la séance du {current_date.strftime('%d/%m/%Y')}...")
                 text_content = content_analyzer.get_text_content(url)
                 
                 if text_content:
@@ -250,20 +279,20 @@ def main():
             current_date += timedelta(days=1)
 
         if all_c_results or all_t_results:
-            status_text.text("Génération du rapport PDF...")
-            pdf_exporter.export_results(all_c_results, all_t_results, "rapport_surveillance.pdf")
+            status_text.text("Génération de la synthèse PDF...")
+            pdf_exporter.export_results(all_c_results, all_t_results, "synthese_debats.pdf")
             
-            with open("rapport_surveillance.pdf", "rb") as pdf_file:
+            with open("synthese_debats.pdf", "rb") as pdf_file:
                 st.download_button(
-                    label="Télécharger le rapport PDF",
+                    label="Télécharger la synthèse PDF",
                     data=pdf_file,
-                    file_name="rapport_surveillance.pdf",
+                    file_name="synthese_debats.pdf",
                     mime="application/pdf"
                 )
             
-            st.success("Analyse terminée! Vous pouvez télécharger le rapport PDF.")
+            st.success("Analyse terminée! Vous pouvez télécharger la synthèse PDF.")
         else:
-            st.warning("Aucun résultat trouvé pour la période spécifiée.")
+            st.warning("Aucune mention trouvée pour la période spécifiée.")
 
         status_text.empty()
         progress_bar.empty()
